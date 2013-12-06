@@ -1,24 +1,25 @@
 {
-    "name": "express-boilerplate"
-  , "description": "Example of a suggested structure for a Web application using Express."
-  , "version": "0.3.0"
-  , "private": true
-  , "author": "Martin Angers"
-  , "dependencies": {
-      "debug": "0.x"
-    , "express": "3.x"
-    , "jade": "0.x"
-    , "mongoose": "3.x"
-    , "implementjs": "0.1.x"
-  }
-  , "devDependencies": {
-      "mocha": "*"
-  }
-  , "scripts": {
-      "test": "make test"
-    , "start": "make"
-  }
-  , "engines": { 
+  "name": "ripple-light-transaction-api",
+  "description": "Lightweight Ripple transaction API",
+  "version": "0.0.1",
+  "private": true,
+  "author": "Ripple Labs Inc.",
+  "dependencies": {
+    "debug": "0.x",
+    "express": "3.x",
+    "jade": "0.x",
+    "mongoose": "3.x",
+    "implementjs": "0.1.x",
+    "ripple-lib": "~0.7.29"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "scripts": {
+    "test": "make test",
+    "start": "make"
+  },
+  "engines": {
     "node": "*"
   }
 }
