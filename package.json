@@ -10,10 +10,12 @@
     "jade": "0.x",
     "mongoose": "3.x",
     "implementjs": "0.1.x",
-    "ripple-lib": "~0.7.29"
+    "ripple-lib": "~0.7.29",
+    "validator": "*"
   },
   "devDependencies": {
-    "mocha": "*"
+    "mocha": "*",
+    "expect.js": "*"
   },
   "scripts": {
     "test": "make test",
