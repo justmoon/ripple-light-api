@@ -1,5 +1,6 @@
 var assert = require('assert');
 var expect = require('expect.js');
+var sinon = require("sinon");
 var AccountHistory = require("../lib/account_history.js");
 
 describe('AccountHistory', function() {
@@ -8,7 +9,19 @@ describe('AccountHistory', function() {
 			var account = 'somerippleaccount'; 
       history = new AccountHistory({ account: account });
 			assert(history.resultTransactions.length == 0);
-    });;
+    });
+	
+		it('should have a resultLedgerIndex of null', function(){
+			var account = 'somerippleaccount'; 
+      history = new AccountHistory({ account: account });
+			assert(history.resultLedgerIndex == null);
+		});
+
+		it('should have a resultEnoughLedger of null', function(){
+			var account = 'somerippleaccount'; 
+      history = new AccountHistory({ account: account });
+			assert(history.resultEnoughLedger == null);
+		});
   });
 
   describe('#getPayments()', function() {
@@ -124,5 +137,70 @@ describe('AccountHistory', function() {
 				validated: unformattedTransaction.validated
 			}));
 		});
+	});
+
+	describe('deciding to continue or finish', function(){
+		describe("no marker on the result", function() {
+			beforeEach(function(){
+				result = {};	
+				finish = sinon.spy(); 
+			});
+
+			it('should finish without the result marker', function() {
+				history.continueProcessingOrFinish(result, finish);	
+				assert(finish.calledWith(false));
+			});
+
+			it('should set the resultLedgerConsidered without the result market', function(){
+				history.continueProcessingOrFinish(result, finish);	
+				assert(history.resultLedgerConsidered == result.ledgerIndexMax);
+			});
+		});
+
+		describe('having less transactions than the user specified', function(){
+			beforeEach(function(){
+				finish = sinon.spy(); 
+				result = { marker: 21 };
+				history.getMoreTransactions = sinon.spy();
+			});
+
+	    it('should get more transactions', function(){
+		    history.limit = 50;
+				history.resultTransactions = [1,2,3];
+				history.continueProcessingOrFinish(result, finish);
+				assert(history.getMoreTransactions.calledWith(result.marker));
+			});		
+
+			it('should finish loading the ledger even if limit is reached', function(){
+		    history.limit = 3;
+				history.resultTransactions = [1,2,3];
+				history.resultEnoughLedger = 999;
+				result.marker = { ledger: 999 };
+				history.continueProcessingOrFinish(result, finish);
+				assert(history.getMoreTransactions.calledWith(result.marker));
+			});
+
+			describe('loaded partial result', function(){
+			  it('should set the resultLedgerConsidered to the ledger index of the last transaction', function() {
+					lastTransaction = { tx: { ledger_index: 43 }};
+					history.resultTransactions = [{}, {}, lastTransaction];
+					history.continueProcessingOrFinish(result, finish);
+					assert(history.resultLedgerConsidered == 43);
+					assert(finish.calledWith(true));
+				})	
+			});
+		});
+	});
+
+	describe('getting more transactions', function(){
+		it('#getMoreTransactions should be a function', function(){
+			assert((typeof history.getMoreTransactions) == 'function');
+		});
+
+		it('should call ripple account_tx with the configuration', function(){
+	    history.remote.request_account_tx = sinon.spy();
+			history.getMoreTransactions('marker');
+			assert(history.remote.request_account_tx.called);
+    });
 	});
 })
