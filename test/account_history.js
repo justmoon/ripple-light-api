@@ -1,6 +1,5 @@
 var assert = require('assert');
 var expect = require('expect.js');
-var validator = require("node-validator");
 var AccountHistory = require("../lib/account_history.js");
 
 describe('AccountHistory', function() {
@@ -13,9 +12,7 @@ describe('AccountHistory', function() {
     });
 
     it('should return true', function(){
-      console.log('history');
       history = new AccountHistory({ account: account });
-      console.log(history);
       assert((typeof history.getPayments) == 'function');
     });
 
@@ -46,11 +43,51 @@ describe('AccountHistory', function() {
     it('should by default limit the number of transactions to 50', function() {
       history = new AccountHistory({ account: account });
       assert(history.limit == 50);
+
     });
 
     it('should by default start from the accounts first ledger', function() {
       history = new AccountHistory({ account: account });
       assert(history.fromLedger == -1);
+    });
+  });
+
+
+	describe('filtering transactions to subset of payments', function() {
+		beforeEach(function(){
+			var account = 'somerippleaccount'; 
+      history = new AccountHistory({ account: account });
+			validPaymentTo = {
+		    tx: { TransactionType: 'Payment', Destination: account }	
+      };
+			validPaymentFrom = {
+		    tx: { TransactionType: 'Payment', Account: account }	
+      };
+    });
+
+		it('should have #filter_payments function', function() {
+			assert(typeof history.filterTransactions == 'function');			
+		});
+
+		it('#filter_payments should reject transactions that are not payments', function(){
+			var entry = { tx: { TransactionType: 'NotAPayment'}};
+			assert(history.filterTransactions([entry]).length == 0);
+    });
+
+		it('#filter_payments should accept transactions that are payments', function(){
+			var entry = new Object(validPaymentFrom);
+			assert(history.filterTransactions([entry]).length == 1);
+    });
+
+	  it('#filter_payments should reject payments not to or from the account', function(){
+			var entry = { tx: { TransactionType: 'Payment'}};
+			entry.tx.Destination = null;
+			entry.tx.Account = null;
+			assert(history.filterTransactions([entry]).length == 0);
+			entry.tx.Account = history.account;
+			entry.tx.Account = null;
+			entry.tx.Destination = history.account;
+			assert(history.filterTransactions([entry]).length == 1);
     });
   });
 })
