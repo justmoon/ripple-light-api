@@ -3,6 +3,14 @@ var expect = require('expect.js');
 var AccountHistory = require("../lib/account_history.js");
 
 describe('AccountHistory', function() {
+	describe('initialization', function() {
+    it("should have an empty array of resultTransactions", function(){
+			var account = 'somerippleaccount'; 
+      history = new AccountHistory({ account: account });
+			assert(history.resultTransactions.length == 0);
+    });;
+  });
+
   describe('#getPayments()', function() {
     var account = 'somerippleaccount'; 
 
@@ -90,4 +98,31 @@ describe('AccountHistory', function() {
 			assert(history.filterTransactions([entry]).length == 1);
     });
   });
+
+	describe('adding formatted transactions', function(){
+		before(function(){
+			unformattedTransaction = {
+				tx: 'transaction',
+				meta: { TransactionResult: 'tesSUCCESS' }, 
+			  validated: 'validated'
+			}
+			history.resultTransactions = [];
+		});
+
+		it('should format the transactions', function() {
+			assert((typeof history.addFormattedTransactions) == 'function');
+		});
+
+		it('should push them all to the resultTransactions', function() {
+			assert(history.resultTransactions.length == 0);
+			history.addFormattedTransactions([unformattedTransaction]);
+			assert(history.resultTransactions.length == 1);
+			assert(JSON.stringify(history.resultTransactions[0]) == JSON.stringify({
+		    engine_result: 'tesSUCCESS',	
+				tx: unformattedTransaction.tx,
+				meta: unformattedTransaction.meta,
+				validated: unformattedTransaction.validated
+			}));
+		});
+	});
 })
