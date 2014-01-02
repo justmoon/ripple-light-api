@@ -146,11 +146,6 @@ describe('AccountHistory', function() {
 				finish = sinon.spy(); 
 			});
 
-			it('should finish without the result marker', function() {
-				history.continueProcessingOrFinish(result, finish);	
-				assert(finish.calledWith(false));
-			});
-
 			it('should set the resultLedgerConsidered without the result market', function(){
 				history.continueProcessingOrFinish(result, finish);	
 				assert(history.resultLedgerConsidered == result.ledgerIndexMax);
@@ -186,13 +181,16 @@ describe('AccountHistory', function() {
 					history.resultTransactions = [{}, {}, lastTransaction];
 					history.continueProcessingOrFinish(result, finish);
 					assert(history.resultLedgerConsidered == 43);
-					assert(finish.calledWith(true));
 				})	
 			});
 		});
 	});
 
 	describe('getting more transactions', function(){
+    before(function(){
+			var account = 'somerippleaccount'; 
+      history = new AccountHistory({ account: account });
+    });
 		it('#getMoreTransactions should be a function', function(){
 			assert((typeof history.getMoreTransactions) == 'function');
 		});
@@ -203,4 +201,28 @@ describe('AccountHistory', function() {
 			assert(history.remote.request_account_tx.called);
     });
 	});
+
+  describe('handling transactions', function(){
+    before(function(){
+			var account = 'somerippleaccount'; 
+      history = new AccountHistory({ account: account });
+    });
+  
+    it('should filter the transactions', function(){
+      history.filterTransactions = sinon.spy();
+      history.addFormattedTransactions = sinon.stub();
+      history.continueProcessingOrFinish = sinon.stub();
+      var result = { transactions: [] };
+      history.handleTransactions(null, result);
+      assert(history.filterTransactions.calledWith(result.transactions));
+    });
+  });
+
+  describe('getting payments with callback', function(){
+    it('should set the payment history callback when getPayments is called', function(){
+			var account = 'somerippleaccount'; 
+      history = new AccountHistory({ account: account });
+      assert.equal(history.callback,console.log);
+    });
+  });
 })
